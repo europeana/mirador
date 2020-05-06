@@ -99,13 +99,32 @@ function fetchAnnotationResourcesFulltext(annotationJson) {
 
   const fulltext = {};
 
+  // TODO: error handling
   const fetches = uniq(urls).map(url => fetch(url)
-    .then(response => response.json())
+    .then(response => decodeFulltextResponseToJson(response))
     .then((json) => {
       if (json.type === 'FullTextResource') fulltext[url] = json.value;
     }));
 
   return Promise.all(fetches).then(() => fulltext);
+}
+
+/**
+ * decodeFulltextResponseToJson - hack to decode *erroneous* non-utf8 encoded data in JSON
+ *
+ * Usage: append to URL e.g. `?encoding=iso-8859-1`
+ *
+ * @param  {Object} response
+ */
+function decodeFulltextResponseToJson(response) {
+  const encoding = new URL(window.location.href).searchParams.get('encoding');
+
+  if (!encoding) return response.json();
+
+  return response.blob()
+    .then(blob => blob.arrayBuffer())
+    .then(buffer => new TextDecoder(encoding).decode(buffer))
+    .then(decoded => JSON.parse(decoded));
 }
 
 /**
