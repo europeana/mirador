@@ -1,4 +1,3 @@
-import axios from 'axios';
 import fetch from 'isomorphic-unfetch';
 import uniq from 'lodash/uniq';
 import ActionTypes from './action-types';
@@ -101,9 +100,10 @@ function fetchAnnotationResourcesFulltext(annotationJson) {
   const fulltext = {};
 
   // TODO: error handling
-  const fetches = uniq(urls).map(url => axios.get(url)
+  const fetches = uniq(urls).map(url => fetch(url)
+    .then(response => response.json())
     .then((response) => {
-      if (response.data.type === 'FullTextResource') fulltext[url] = response.data.value;
+      if (response.type === 'FullTextResource') fulltext[url] = response.value;
     }));
 
   return Promise.all(fetches).then(() => fulltext);
@@ -117,7 +117,6 @@ function fetchAnnotationResourcesFulltext(annotationJson) {
 function dereferenceAnnotationResources(annotationJson) {
   return fetchAnnotationResourcesFulltext(annotationJson)
     .then((fulltext) => {
-      // console.log('fulltext', fulltext);
       const dereferencedJson = Object.assign({}, annotationJson);
 
       dereferencedJson.resources = annotationJson.resources.map((resource) => {
@@ -140,7 +139,6 @@ function dereferenceAnnotationResources(annotationJson) {
               Number(charMatch[1]),
               Number(charMatch[2]) + 1,
             );
-            // console.log('annotation chars', dereferencedResource.resource.chars);
           }
         }
 
