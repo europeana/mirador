@@ -1,4 +1,5 @@
 import { createSelector } from 'reselect';
+import compact from 'lodash/compact';
 import filter from 'lodash/filter';
 import flatten from 'lodash/flatten';
 import AnnotationFactory from '../../lib/AnnotationFactory';
@@ -66,12 +67,7 @@ export const getAnnotationResourcesByMotivationForCanvas = createSelector(
     getPresentAnnotationsCanvas,
     (state, { motivations }) => motivations,
   ],
-  (annotations, motivations) => filter(
-    flatten(annotations.map(annotation => annotation.resources)),
-    resource => resource.motivations.some(
-      motivation => motivations.includes(motivation),
-    ),
-  ),
+  (annotations, motivations) => filterAnnotationResources(annotations, motivations),
 );
 
 /**
@@ -85,11 +81,30 @@ export const getAnnotationResourcesByMotivation = createSelector(
     getPresentAnnotationsOnSelectedCanvases,
     (state, { motivations }) => motivations,
   ],
-  (annotations, motivations) => filter(
-    flatten(annotations.map(annotation => annotation.resources)),
-    resource => resource.motivations.some(
-      motivation => motivations.includes(motivation),
-    ),
+  (annotations, motivations) => filterAnnotationResources(annotations, motivations),
+);
+
+/**
+* Return an array of annotation resources filtered by the given filters
+* @param {Array} annotations
+* @param {Object} filter
+* @return {Array}
+*/
+const filterAnnotationResources = (annotations, filters) => filter(
+  flatten(annotations.map(annotation => annotation.resources)),
+  resource => Object.entries(filters).every(
+    (resourceFilter) => {
+      let filterProperty;
+      if (resource.resource[resourceFilter[0]]) {
+        filterProperty = resource.resource[resourceFilter[0]];
+      } else {
+        filterProperty = resource[resourceFilter[0]];
+      }
+
+      return flatten(compact(new Array(filterProperty))).some(
+        propertyValue => resourceFilter[1].includes(propertyValue),
+      );
+    },
   ),
 );
 
