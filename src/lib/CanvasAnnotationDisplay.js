@@ -5,21 +5,22 @@
 export default class CanvasAnnotationDisplay {
   /** */
   constructor({
-    resource, color, zoom, offset, width,
+    resource, color, zoomRatio, offset, selected,
   }) {
     this.resource = resource;
     this.color = color;
-    this.zoom = zoom;
+    this.zoomRatio = zoomRatio;
     this.offset = offset;
-    this.width = width || 1000;
+    this.selected = selected;
   }
 
   /** */
   toContext(context) {
+    this.context = context;
     if (this.resource.svgSelector) {
-      this.svgContext(context);
+      this.svgContext();
     } else {
-      this.fragmentContext(context);
+      this.fragmentContext();
     }
   }
 
@@ -29,43 +30,64 @@ export default class CanvasAnnotationDisplay {
   }
 
   /** */
-  svgContext(context) {
+  svgContext() {
     [...this.svgPaths].forEach((element) => {
       /**
        *  Note: Path2D is not supported in IE11.
        *  TODO: Support multi canvas offset
        *  One example: https://developer.mozilla.org/en-US/docs/Web/API/Path2D/addPath
        */
-      context.save();
-      context.translate(this.offset.x, this.offset.y);
+      this.context.save();
+      this.context.translate(this.offset.x, this.offset.y);
       const p = new Path2D(element.attributes.d.nodeValue);
-      /**
-       * Note: we could do something to return the svg styling attributes as
-       * some have encoded information in these values. However, how should we
-       * handle highlighting and other complications?
-       *  context.strokeStyle = element.attributes.stroke.nodeValue;
-       *  context.lineWidth = element.attributes['stroke-width'].nodeValue;
-       */
-      context.strokeStyle = this.color; // eslint-disable-line no-param-reassign
-      context.lineWidth = this.lineWidth(); // eslint-disable-line no-param-reassign
-      context.stroke(p);
-      context.restore();
+
+      // Setup styling from SVG -> Canvas
+      this.context.strokeStyle = this.color;
+      if (element.attributes['stroke-dasharray']) {
+        this.context.setLineDash(element.attributes['stroke-dasharray'].nodeValue.split(','));
+      }
+      const svgToCanvasMap = {
+        fill: 'fillStyle',
+        stroke: 'strokeStyle',
+        'stroke-dashoffset': 'lineDashOffset',
+        'stroke-linecap': 'lineCap',
+        'stroke-linejoin': 'lineJoin',
+        'stroke-miterlimit': 'miterlimit',
+        'stroke-width': 'lineWidth',
+      };
+      Object.keys(svgToCanvasMap).forEach((key) => {
+        if (element.attributes[key]) {
+          this.context[svgToCanvasMap[key]] = element.attributes[key].nodeValue;
+        }
+      });
+
+      // Resize the stroke based off of the zoomRatio (currentZoom / maxZoom)
+      this.context.lineWidth /= this.zoomRatio;
+      // Reset the color if it is selected
+      if (this.selected) {
+        this.context.strokeStyle = this.color;
+      }
+      this.context.stroke(p);
+
+      // Wait to set the fill, so we can adjust the globalAlpha value if we need to
+      if (element.attributes.fill && element.attributes.fill.nodeValue !== 'none') {
+        if (element.attributes['fill-opacity']) {
+          this.context.globalAlpha = element.attributes['fill-opacity'].nodeValue;
+        }
+        this.context.fill(p);
+      }
+      this.context.restore();
     });
   }
 
   /** */
-  fragmentContext(context) {
+  fragmentContext() {
     const fragment = this.resource.fragmentSelector;
     fragment[0] += this.offset.x;
     fragment[1] += this.offset.y;
-    context.strokeStyle = this.color; // eslint-disable-line no-param-reassign
-    context.lineWidth = this.lineWidth(); // eslint-disable-line no-param-reassign
-    context.strokeRect(...fragment);
-  }
-
-  /** */
-  lineWidth() {
-    return Math.ceil(10 / (this.zoom * this.width));
+    this.context.strokeStyle = this.color;
+    this.context.lineWidth = 1 / this.zoomRatio;
+    this.context.strokeRect(...fragment);
   }
 
   /** */

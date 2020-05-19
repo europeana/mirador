@@ -1,3 +1,5 @@
+import uuid from 'uuid/v4';
+
 export default {
   canvasNavigation: { // Set the hight and width of canvas thumbnails in the  CanvasNavigation companion window
     height: 50,
@@ -201,6 +203,7 @@ export default {
   },
   language: 'en', // The default language set in the application
   availableLanguages: { // All the languages available in the language switcher
+    ar: 'العربية',
     de: 'Deutsch',
     en: 'English',
     fr: 'Français',
@@ -212,6 +215,7 @@ export default {
     it: "Italiano",
   },
   annotations: {
+    htmlSanitizationRuleSet: 'iiif', // See src/lib/htmlRules.js for acceptable values
     filteredMotivations: ['oa:commenting', 'sc:painting', 'commenting'],
   },
   classPrefix: 'mirador',
@@ -238,7 +242,13 @@ export default {
       canvas: true,
       annotations: true,
       search: true,
-    }
+    },
+    views: [
+      { key: 'single', behaviors: ['individuals'] },
+      { key: 'book', behaviors: ['paged'] },
+      { key: 'scroll', behaviors: ['continuous'] },
+      { key: 'gallery' },
+    ],
   },
   windows: [ // Array of windows to be open when mirador initializes (each object should at least provide a manifestId key with the value of the IIIF presentation manifest to load)
     /**
@@ -258,6 +268,8 @@ export default {
     width: 100, // width of one canvas (doubled for book view) in ThumbnailNavigation area when position is "far-right"
   },
   workspace: {
+    draggingEnabled: true,
+    id: uuid(),
     exposeModeOn: false, // unused?
     height: 5000, // height of the elastic mode's virtual canvas
     showZoomControls: false, // Configure if zoom controls should be displayed by default

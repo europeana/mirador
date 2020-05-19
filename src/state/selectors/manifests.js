@@ -338,9 +338,10 @@ export const getManifestMetadata = createSelector(
 /** */
 function getLocalesForStructure(item) {
   const languages = [];
+
   if (Array.isArray(item)) {
     languages.push(...item.filter(i => (typeof i === 'object' && i['@language'])).map(i => i['@language']));
-  } else if (typeof item === 'object') {
+  } else if (item && typeof item === 'object') {
     if (item['@language']) languages.push(item['@language']);
   }
   return languages;
@@ -415,6 +416,26 @@ export const getManifestViewingHint = createSelector(
       || manifest.getViewingHint();
     if (viewingHint) return viewingHint;
     return null;
+  },
+);
+
+/**
+ * Returns the behaviors viewing hint for the manifest
+ * @param {object} state
+ * @param {object} props
+ * @param {string} props.manifestId
+ * @param {string} props.windowId
+ * @return {Number}
+ */
+export const getManifestBehaviors = createSelector(
+  [getManifestoInstance],
+  (manifest) => {
+    if (!manifest) return [];
+    const behaviors = manifest.getProperty('behavior');
+
+    if (!behaviors) return [];
+    if (Array.isArray(behaviors)) return behaviors;
+    return [behaviors];
   },
 );
 

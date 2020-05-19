@@ -2,6 +2,7 @@ import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { withTranslation } from 'react-i18next';
 import { withStyles } from '@material-ui/core/styles';
+import { withPlugins } from '../extend/withPlugins';
 import * as actions from '../state/actions';
 import {
   getAnnotationResourcesByMotivationForCanvas,
@@ -31,6 +32,7 @@ const mapStateToProps = (state, { canvasId, windowId }) => ({
       state, { canvasId, motivations: state.config.annotations.filteredMotivations, windowId },
     ),
   ),
+  htmlSanitizationRuleSet: state.config.annotations.htmlSanitizationRuleSet,
   label: getCanvasLabel(state, {
     canvasId,
     windowId,
@@ -69,6 +71,7 @@ const enhance = compose(
   withTranslation(),
   withStyles(styles),
   connect(mapStateToProps, mapDispatchToProps),
+  withPlugins('CanvasAnnotations'),
 );
 
 export default enhance(CanvasAnnotations);

@@ -84,7 +84,7 @@ export class OpenSeadragonViewer extends Component {
       this.viewer.viewport.panTo(viewer, true);
       this.viewer.viewport.zoomTo(viewer.zoom, viewer, true);
     }
-    this.addAllImageSources();
+    this.addAllImageSources(!(viewer));
   }
 
   /**
@@ -128,7 +128,8 @@ export class OpenSeadragonViewer extends Component {
       || !this.nonTiledImagedMatch(prevProps.nonTiledImages)
     ) {
       this.viewer.close();
-      this.addAllImageSources();
+      const canvasesChanged = !(isEqual(canvasWorld.canvasIds, prevProps.canvasWorld.canvasIds));
+      this.addAllImageSources((canvasesChanged || !viewer));
     } else if (!isEqual(canvasWorld.layers, prevProps.canvasWorld.layers)) {
       this.refreshTileProperties();
     } else if (viewer && !this.osdUpdating) {
@@ -185,17 +186,16 @@ export class OpenSeadragonViewer extends Component {
   /**
    * annotationsToContext - converts anontations to a canvas context
    */
-  annotationsToContext(annotations, color = 'yellow') {
+  annotationsToContext(annotations, color = 'yellow', selected = false) {
     const { canvasWorld } = this.props;
     const context = this.osdCanvasOverlay.context2d;
-    const zoom = this.viewer.viewport.getZoom(true);
-    const width = canvasWorld.worldBounds()[2];
+    const zoomRatio = this.viewer.viewport.getZoom(true) / this.viewer.viewport.getMaxZoom();
     annotations.forEach((annotation) => {
       annotation.resources.forEach((resource) => {
         if (!canvasWorld.canvasIds.includes(resource.targetId)) return;
         const offset = canvasWorld.offsetByCanvas(resource.targetId);
         const canvasAnnotationDisplay = new CanvasAnnotationDisplay({
-          color, offset, resource, width, zoom,
+          color, offset, resource, selected, zoomRatio,
         });
         canvasAnnotationDisplay.toContext(context);
       });
@@ -203,14 +203,14 @@ export class OpenSeadragonViewer extends Component {
   }
 
   /** */
-  addAllImageSources() {
+  addAllImageSources(zoomAfterAdd = true) {
     const { nonTiledImages, infoResponses } = this.props;
     Promise.all(
       infoResponses.map(infoResponse => this.addTileSource(infoResponse)),
       nonTiledImages.map(image => this.addNonTiledImage(image)),
     ).then(() => {
       if (infoResponses[0] || nonTiledImages[0]) {
-        this.zoomToWorld();
+        if (zoomAfterAdd) this.zoomToWorld();
         this.refreshTileProperties();
       }
     });
@@ -359,10 +359,11 @@ export class OpenSeadragonViewer extends Component {
     this.annotationsToContext(
       selectedContentSearchAnnotations,
       palette.highlights.primary,
+      true,
     );
 
     this.annotationsToContext(highlightedAnnotations, palette.highlights.secondary);
-    this.annotationsToContext(selectedAnnotations, palette.highlights.primary);
+    this.annotationsToContext(selectedAnnotations, palette.highlights.primary, true);
   }
 
   /**

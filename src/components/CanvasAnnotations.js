@@ -58,6 +58,7 @@ export class CanvasAnnotations extends Component {
   render() {
     const {
       annotations, classes, index, label, selectedAnnotationIds, t, totalSize,
+      listContainerComponent, htmlSanitizationRuleSet,
     } = this.props;
     if (annotations.length === 0) return <></>;
 
@@ -71,9 +72,10 @@ export class CanvasAnnotations extends Component {
             annotations.map(annotation => (
               <ListItem
                 button
-                component="li"
+                component={listContainerComponent}
                 className={classes.annotationListItem}
                 key={annotation.id}
+                annotationid={annotation.id}
                 selected={selectedAnnotationIds.includes(annotation.id)}
                 onClick={e => this.handleClick(e, annotation)}
                 onFocus={() => this.handleAnnotationHighlight(annotation)}
@@ -82,7 +84,10 @@ export class CanvasAnnotations extends Component {
                 onMouseLeave={this.handleAnnotationUnHighlight}
               >
                 <ListItemText primaryTypographyProps={{ variant: 'body2' }}>
-                  <SanitizedHtml ruleSet="iiif" htmlString={annotation.content} />
+                  <SanitizedHtml
+                    ruleSet={htmlSanitizationRuleSet}
+                    htmlString={annotation.content}
+                  />
                 </ListItemText>
               </ListItem>
             ))
@@ -104,8 +109,10 @@ CanvasAnnotations.propTypes = {
   classes: PropTypes.objectOf(PropTypes.string),
   deselectAnnotation: PropTypes.func.isRequired,
   highlightAnnotation: PropTypes.func.isRequired,
+  htmlSanitizationRuleSet: PropTypes.string,
   index: PropTypes.number.isRequired,
   label: PropTypes.string.isRequired,
+  listContainerComponent: PropTypes.elementType,
   selectAnnotation: PropTypes.func.isRequired,
   selectedAnnotationIds: PropTypes.arrayOf(PropTypes.string),
   t: PropTypes.func.isRequired,
@@ -115,5 +122,7 @@ CanvasAnnotations.propTypes = {
 CanvasAnnotations.defaultProps = {
   annotations: [],
   classes: {},
+  htmlSanitizationRuleSet: 'iiif',
+  listContainerComponent: 'li',
   selectedAnnotationIds: [],
 };

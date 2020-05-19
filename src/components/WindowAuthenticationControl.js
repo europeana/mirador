@@ -7,6 +7,7 @@ import DialogActions from '@material-ui/core/DialogActions';
 import Typography from '@material-ui/core/Typography';
 import LockIcon from '@material-ui/icons/LockSharp';
 import SanitizedHtml from '../containers/SanitizedHtml';
+import AuthenticationLogout from '../containers/AuthenticationLogout';
 
 /**
  */
@@ -67,10 +68,11 @@ export class WindowAuthenticationControl extends Component {
       profile,
       status,
       t,
+      windowId,
     } = this.props;
 
     const failed = status === 'failed';
-    if ((!degraded || !profile) && status !== 'fetching') return <></>;
+    if ((!degraded || !profile) && status !== 'fetching') return <AuthenticationLogout windowId={windowId} />;
     if (!this.isInteractive() && !failed) return <></>;
 
     const { showFailureMessage, open } = this.state;
@@ -91,7 +93,7 @@ export class WindowAuthenticationControl extends Component {
       <Paper square elevation={4} color="secondary" classes={{ root: classes.paper }}>
         <Button fullWidth className={classes.topBar} onClick={hasCollapsedContent ? this.handleClickOpen : this.handleConfirm} component="div" color="inherit">
           <LockIcon className={classes.icon} />
-          <Typography className={classes.label} component="h3" variant="body1" color="inherit" inline>
+          <Typography className={classes.label} component="h3" variant="body1" color="inherit">
             <SanitizedHtml htmlString={(isInFailureState ? failureHeader : label) || t('authenticationRequired')} ruleSet="iiif" />
           </Typography>
           <span className={classes.fauxButton}>

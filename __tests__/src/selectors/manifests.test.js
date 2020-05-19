@@ -27,6 +27,7 @@ import {
   getManifestUrl,
   getManifestViewingDirection,
   getManifestViewingHint,
+  getManifestBehaviors,
   getManifestTreeStructure,
   getMetadataLocales,
   getRequiredStatement,
@@ -359,6 +360,8 @@ describe('getMetadataLocales', () => {
           label: 'Some label',
           value: { '@language': 'one-value', '@value': '1' },
         },
+        { label: 'Bad value', value: null },
+        { label: null, value: 'Bad label' },
       ],
     };
     const state = { manifests: { x: { json: manifest } } };
@@ -502,6 +505,13 @@ describe('getManifestViewingHint', () => {
   it('is null if no viewingHint is specified', () => {
     const state = { manifests: { x: { json: manifestFixture019 } } };
     expect(getManifestViewingHint(state, { manifestId: 'x' })).toBeNull();
+  });
+});
+
+describe('getManifestBehaviors', () => {
+  it('gets from the manifest', () => {
+    const state = { manifests: { x: { json: manifestFixturev3001 } } };
+    expect(getManifestBehaviors(state, { manifestId: 'x' })).toEqual(['individuals']);
   });
 });
 
