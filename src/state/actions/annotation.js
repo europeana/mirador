@@ -163,9 +163,10 @@ export function fetchAnnotation(targetId, annotationId) {
   return ((dispatch) => {
     dispatch(requestAnnotation(targetId, annotationId));
 
+    // { headers: { Accept: 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"' } }
     return fetch(annotationId)
       .then(response => response.json())
-      .then(json => filterAnnotationResources(json))
+      // .then(json => filterAnnotationResources(json))
       .then(json => coerceAnnotationToCanvasId(targetId, json))
       .then(json => dereferenceAnnotationResources(json))
       .then(json => dispatch(receiveAnnotation(targetId, annotationId, json)))
