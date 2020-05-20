@@ -110,7 +110,7 @@ function fetchAnnotationResourcesFulltext(annotationJson) {
 }
 
 /**
- * filterAnnotationResources - dereference annotation resources
+ * dereferenceAnnotationResources - dereference annotation resources
  *
  * @param  {Object} annotationJson
  */
