@@ -82,7 +82,11 @@ function coerceAnnotationToCanvasId(targetId, annotationJson) {
 function filterAnnotationResources(annotationJson) {
   const filteredJson = Object.assign({}, annotationJson);
 
-  filteredJson.resources = annotationJson.resources.filter(resource => resource.dcType === 'Line');
+  // Filter to line-level annotations, and only those with a `char` fragment
+  // selector.
+  filteredJson.resources = annotationJson.resources.filter(
+    resource => (resource.dcType === 'Line') && (/char=(\d+),(\d+)$/.test(resource.resource['@id'])),
+  );
 
   return filteredJson;
 }
